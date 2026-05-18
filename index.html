@@ -1,0 +1,545 @@
+<!DOCTYPE html>
+
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+<title>ALARIC</title>
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --bg:#07070b;--text:#e8e4dd;--dim:rgba(232,228,221,.3);--mid:rgba(232,228,221,.55);
+  --ac:#CFA872;--ac2:#E8653A;--ac3:#D4A03C;
+  --serif:Georgia,'Times New Roman',serif;
+  --sans:-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,sans-serif;
+  --mono:'SF Mono',Menlo,Consolas,monospace;
+  --card:rgba(255,255,255,.025);--border:rgba(255,255,255,.06);--bf:rgba(207,168,114,.35);
+}
+html{scroll-behavior:smooth}
+body{background:var(--bg);color:var(--text);font-family:var(--sans);overflow-x:hidden;min-height:100vh;-webkit-tap-highlight-color:transparent}
+::selection{background:rgba(207,168,114,.2)}
+::-webkit-scrollbar{width:3px}
+::-webkit-scrollbar-thumb{background:rgba(207,168,114,.15);border-radius:2px}
+
+/* ── LANDING ── */
+#landing{position:fixed;inset:0;z-index:100;display:flex;flex-direction:column;align-items:center;justify-content:center;cursor:default;overflow:hidden;background:var(–bg);transition:opacity 1.2s cubic-bezier(.4,0,.2,1),transform 1.2s cubic-bezier(.4,0,.2,1)}
+#landing.exit{opacity:0;transform:scale(1.05)}
+#landingCanvas{position:absolute;inset:0;z-index:1}
+
+.landing-content{position:relative;z-index:10;text-align:center;pointer-events:none}
+.landing-brand{font-family:var(–serif);font-size:clamp(48px,14vw,120px);font-weight:bold;letter-spacing:.5em;text-indent:.5em;opacity:0;transform:translateY(15px);color:var(–text);pointer-events:auto;user-select:none;cursor:default;transition:text-shadow .3s}
+.landing-brand.show{animation:brandReveal 2.5s cubic-bezier(.23,1,.32,1) forwards}
+.landing-sub{font-family:var(–mono);font-size:clamp(9px,2vw,13px);letter-spacing:.35em;text-transform:uppercase;color:rgba(207,168,114,.35);margin-top:28px;opacity:0}
+.landing-sub.show{animation:fadeSlide 1.5s ease 1.8s forwards}
+.landing-line{width:40px;height:1px;background:linear-gradient(90deg,transparent,rgba(207,168,114,.3),transparent);margin:32px auto 0;opacity:0}
+.landing-line.show{animation:fadeSlide 1s ease 2.4s forwards}
+.tap-hint{font-family:var(–mono);font-size:10px;letter-spacing:.2em;color:rgba(232,228,221,.12);margin-top:36px;opacity:0;text-transform:uppercase}
+.tap-hint.show{animation:fadeSlide 1s ease 3s forwards}
+
+/* Dot indicators */
+.dots{display:flex;gap:8px;justify-content:center;margin-top:28px;opacity:0}
+.dots.show{animation:fadeSlide .8s ease 3.3s forwards}
+.dot{width:6px;height:6px;border-radius:50%;background:rgba(255,255,255,.08);transition:all .4s cubic-bezier(.23,1,.32,1)}
+.dot.active{background:var(–ac);box-shadow:0 0 12px rgba(207,168,114,.4)}
+
+@keyframes brandReveal{
+0%{opacity:0;transform:translateY(15px);letter-spacing:.8em;text-indent:.8em}
+60%{opacity:1;transform:translateY(0)}
+100%{opacity:1;transform:translateY(0);letter-spacing:.5em;text-indent:.5em}
+}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(12px)}to{opacity:1;transform:translateY(0)}}
+
+/* ── FORM ── */
+#formPage{opacity:0;pointer-events:none;transition:opacity .8s ease .3s;min-height:100vh}
+#formPage.show{opacity:1;pointer-events:auto}
+
+.form-header{position:sticky;top:0;z-index:50;padding:16px 24px;background:linear-gradient(to bottom,var(–bg) 65%,rgba(7,7,11,0));display:flex;justify-content:space-between;align-items:center}
+.form-logo{font-family:var(–serif);font-size:15px;font-weight:bold;letter-spacing:.3em;cursor:default;user-select:none}
+.form-tag{font-family:var(–mono);font-size:9px;color:var(–dim);letter-spacing:.12em;text-transform:uppercase}
+
+.form-hero{text-align:center;padding:min(12vh,80px) 24px 40px;position:relative;z-index:2}
+.form-hero-line{width:30px;height:1px;background:var(–ac);margin:0 auto 20px;opacity:.3}
+.form-hero-tag{font-family:var(–mono);font-size:10px;color:var(–ac);letter-spacing:.3em;text-transform:uppercase;margin-bottom:16px;opacity:0;animation:fadeSlide .8s ease .5s forwards}
+.form-hero-title{font-family:var(–serif);font-size:clamp(24px,5vw,40px);font-weight:normal;line-height:1.3;letter-spacing:.03em;opacity:0;animation:fadeSlide .8s ease .7s forwards}
+.form-hero-sub{font-size:14px;color:var(–dim);margin-top:14px;line-height:1.7;opacity:0;animation:fadeSlide .8s ease .9s forwards}
+
+.form-body{max-width:620px;margin:0 auto;padding:0 20px 40px}
+.q-block{margin-bottom:44px;opacity:0;transform:translateY(25px);transition:all .7s ease}
+.q-block.vis{opacity:1;transform:translateY(0)}
+.q-num{font-family:var(–mono);font-size:10px;color:var(–ac);letter-spacing:.2em;display:inline-block;margin-bottom:10px;background:rgba(207,168,114,.06);padding:3px 10px;border-radius:4px}
+.q-title{font-family:var(–serif);font-size:clamp(18px,3.5vw,24px);font-weight:normal;line-height:1.45;letter-spacing:.02em;margin-bottom:5px;min-height:1.5em;color:var(–mid)}
+.q-sub{font-size:12px;color:var(–dim);line-height:1.5;margin-bottom:14px}
+
+.input-box{position:relative;border-radius:10px;background:var(–card);border:1px solid var(–border);transition:all .4s ease}
+.input-box.on{background:rgba(207,168,114,.03);border-color:var(–bf);box-shadow:0 0 30px rgba(207,168,114,.04)}
+textarea,.email-input{width:100%;padding:18px 20px;background:transparent;border:none;color:var(–text);font-family:var(–sans);font-size:15px;line-height:1.75;resize:none;outline:none;letter-spacing:.01em}
+.email-input{line-height:normal;padding:15px 20px}
+.cc{position:absolute;bottom:10px;right:14px;font-family:var(–mono);font-size:10px;color:var(–dim);opacity:0;transition:opacity .3s}
+
+.submit-area{padding-top:8px;padding-bottom:70px;opacity:0;transform:translateY(25px);transition:all .7s ease}
+.submit-area.vis{opacity:1;transform:translateY(0)}
+.sub-btn{width:100%;padding:17px;border:1px solid var(–border);border-radius:12px;background:rgba(255,255,255,.03);font-family:var(–serif);font-size:15px;font-weight:bold;letter-spacing:.15em;color:var(–dim);cursor:not-allowed;transition:all .5s cubic-bezier(.23,1,.32,1);-webkit-appearance:none}
+.sub-btn.go{background:linear-gradient(135deg,var(–ac),var(–ac3));color:#0a0a0a;border:none;cursor:pointer}
+.sub-btn.go:active{transform:scale(.98);box-shadow:0 8px 30px rgba(207,168,114,.3)}
+.sub-hint{text-align:center;margin-top:12px;font-family:var(–mono);font-size:9px;color:var(–dim);letter-spacing:.1em}
+
+.form-footer{text-align:center;padding:28px 24px 24px;border-top:1px solid var(–border);position:relative;z-index:2}
+.form-footer span{font-family:var(–serif);font-size:12px;letter-spacing:.3em;color:rgba(232,228,221,.15)}
+
+/* ── SUCCESS ── */
+#successPage{display:none;min-height:100vh;align-items:center;justify-content:center;flex-direction:column;text-align:center;padding:24px;background:var(–bg);position:relative}
+#successPage.show{display:flex}
+.s-icon{width:64px;height:64px;border-radius:50%;margin:0 auto 24px;background:rgba(207,168,114,.06);border:1px solid rgba(207,168,114,.15);display:flex;align-items:center;justify-content:center;opacity:0;animation:fadeSlide .8s ease .2s forwards}
+.s-title{font-family:var(–serif);font-size:clamp(24px,5vw,36px);font-weight:normal;letter-spacing:.04em;opacity:0;animation:fadeSlide .8s ease .4s forwards}
+.s-msg{color:var(–dim);font-size:14px;line-height:1.8;max-width:360px;margin:14px auto 0;opacity:0;animation:fadeSlide .8s ease .6s forwards}
+
+/* ── ADMIN ── */
+#adminPage{display:none;min-height:100vh;padding:50px 20px;background:var(–bg)}
+#adminPage.show{display:block}
+.adm-top{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:14px;max-width:700px;margin:0 auto 36px}
+.adm-label{font-family:var(–mono);font-size:10px;color:var(–ac);letter-spacing:.2em;margin-bottom:6px}
+.adm-h{font-family:var(–serif);font-size:26px;font-weight:normal}
+.adm-back{padding:9px 18px;background:transparent;border:1px solid var(–border);border-radius:7px;color:var(–mid);font-size:12px;cursor:pointer;font-family:var(–sans)}
+.adm-list{max-width:700px;margin:0 auto}
+.adm-count{font-family:var(–mono);font-size:11px;color:var(–dim);letter-spacing:.05em;margin-bottom:10px}
+.adm-empty{text-align:center;padding:70px 20px;border:1px dashed var(–border);border-radius:14px;color:var(–dim)}
+.adm-card{background:var(–card);border:1px solid var(–border);border-radius:12px;padding:18px 22px;cursor:pointer;transition:all .3s;margin-bottom:10px}
+.adm-card.open{background:rgba(207,168,114,.03);border-color:var(–bf)}
+.adm-row{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:6px}
+.adm-num{font-family:var(–mono);font-size:10px;color:var(–ac);background:rgba(207,168,114,.07);padding:2px 7px;border-radius:3px;letter-spacing:.1em}
+.adm-email{font-size:13px;margin-left:10px}
+.adm-time{font-family:var(–mono);font-size:10px;color:var(–dim)}
+.adm-detail{display:none;margin-top:18px}
+.adm-card.open .adm-detail{display:block}
+.adm-ql{font-family:var(–mono);font-size:10px;color:var(–ac);letter-spacing:.1em;margin-bottom:6px;margin-top:14px}
+.adm-qa{font-size:13px;line-height:1.85;padding-left:14px;border-left:2px solid rgba(207,168,114,.12);white-space:pre-wrap}
+</style>
+
+</head>
+<body>
+
+<!-- ═══════ LANDING ═══════ -->
+
+<div id="landing">
+  <canvas id="landingCanvas"></canvas>
+  <div class="landing-content">
+    <div class="landing-brand" id="brandText">ALARIC</div>
+    <div class="landing-sub" id="landingSub">Private Investment Circle</div>
+    <div class="landing-line" id="landingLine"></div>
+    <div class="tap-hint" id="tapHint">Tap the name to enter</div>
+    <div class="dots" id="dots">
+      <div class="dot" id="d0"></div>
+      <div class="dot" id="d1"></div>
+      <div class="dot" id="d2"></div>
+      <div class="dot" id="d3"></div>
+      <div class="dot" id="d4"></div>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════ FORM ═══════ -->
+
+<div id="formPage">
+  <header class="form-header">
+    <div class="form-logo" id="formLogo">ALARIC</div>
+    <div class="form-tag">Confidential</div>
+  </header>
+
+  <div class="form-hero">
+    <div class="form-hero-line"></div>
+    <div class="form-hero-tag">Assessment</div>
+    <div class="form-hero-title">请认真回答以下问题</div>
+    <div class="form-hero-sub">我们重视独立思考与深度洞察。</div>
+  </div>
+
+  <div class="form-body">
+    <div class="q-block" id="qb1">
+      <div class="q-num">Q01</div>
+      <div class="q-title">[问题一占位]</div>
+      <div class="q-sub">请在下方输入你的回答</div>
+      <div class="input-box" id="w1">
+        <textarea id="a1" placeholder="在此输入..." rows="4"></textarea>
+        <div class="cc" id="c1"></div>
+      </div>
+    </div>
+
+```
+<div class="q-block" id="qb2">
+  <div class="q-num">Q02</div>
+  <div class="q-title">[问题二占位]</div>
+  <div class="q-sub">请在下方输入你的回答</div>
+  <div class="input-box" id="w2">
+    <textarea id="a2" placeholder="在此输入..." rows="4"></textarea>
+    <div class="cc" id="c2"></div>
+  </div>
+</div>
+
+<div class="q-block" id="qb3">
+  <div class="q-num">CONTACT</div>
+  <div class="q-title" style="font-size:clamp(16px,3vw,20px)">你的联系邮箱</div>
+  <div class="q-sub">仅用于后续沟通</div>
+  <div class="input-box" id="w3">
+    <input class="email-input" type="email" id="em" placeholder="your@email.com">
+  </div>
+</div>
+
+<div class="submit-area" id="subArea">
+  <button class="sub-btn" id="subBtn" disabled>提交回答</button>
+  <div class="sub-hint" id="subHint">请至少回答一个问题并填写邮箱</div>
+</div>
+```
+
+  </div>
+
+  <div class="form-footer"><span>ALARIC</span></div>
+</div>
+
+<!-- ═══════ SUCCESS ═══════ -->
+
+<div id="successPage">
+  <div class="s-icon"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="#CFA872" stroke-width="1.5" stroke-linecap="round"><polyline points="20 6 9 17 4 12"/></svg></div>
+  <div class="s-title">已收到你的回答</div>
+  <p class="s-msg">感谢你认真作答。我们会仔细阅读，并在必要时通过邮件联系你。</p>
+</div>
+
+<!-- ═══════ ADMIN ═══════ -->
+
+<div id="adminPage">
+  <div class="adm-top">
+    <div><div class="adm-label">ALARIC · ADMIN</div><div class="adm-h">提交记录</div></div>
+    <button class="adm-back" id="admBack">← 返回</button>
+  </div>
+  <div class="adm-list" id="admList"></div>
+</div>
+
+<script>
+/* ═══════════════════════════════════════════
+   LANDING CANVAS — ripples + light trails
+   ═══════════════════════════════════════════ */
+var lc = document.getElementById('landingCanvas');
+var lx = lc.getContext('2d');
+var LW, LH;
+function resizeLC() { LW = lc.width = window.innerWidth; LH = lc.height = window.innerHeight; }
+resizeLC();
+window.addEventListener('resize', resizeLC);
+
+// ── Ripples (on tap) ──
+var ripples = [];
+function addRipple(x, y) {
+  ripples.push({ x:x, y:y, r:0, maxR:180+Math.random()*120, alpha:1, speed:2.5+Math.random()*1.5, width:1.5 });
+  ripples.push({ x:x, y:y, r:0, maxR:100+Math.random()*80, alpha:.6, speed:1.8+Math.random(), width:1, delay:8 });
+}
+
+// ── Light trails (on drag) ──
+var trails = [];
+var mouseDown = false;
+var mx = -999, my = -999, pmx = -999, pmy = -999;
+
+function onLandingMove(x, y) {
+  pmx = mx; pmy = my; mx = x; my = y;
+  if (pmx < 0) return;
+  var dx = x - pmx, dy = y - pmy;
+  var dist = Math.sqrt(dx*dx+dy*dy);
+  var count = Math.min(Math.floor(dist * 0.6) + 1, 10);
+  for (var i = 0; i < count; i++) {
+    var t = i / count;
+    trails.push({
+      x: pmx + dx*t + (Math.random()-.5)*6,
+      y: pmy + dy*t + (Math.random()-.5)*6,
+      vx: dx*0.02 + (Math.random()-.5)*.5,
+      vy: dy*0.02 + (Math.random()-.5)*.5 - .2,
+      life: 1,
+      size: 1.5 + Math.random()*2.5,
+      hue: 30 + Math.random()*15,
+    });
+  }
+}
+
+lc.addEventListener('touchstart', function(e) {
+  e.preventDefault();
+  var touch = e.touches[0];
+  pmx = touch.clientX; pmy = touch.clientY;
+  mx = touch.clientX; my = touch.clientY;
+  addRipple(touch.clientX, touch.clientY);
+}, {passive:false});
+
+lc.addEventListener('touchmove', function(e) {
+  e.preventDefault();
+  onLandingMove(e.touches[0].clientX, e.touches[0].clientY);
+}, {passive:false});
+
+lc.addEventListener('touchend', function() { mx = -999; my = -999; pmx = -999; pmy = -999; });
+
+lc.addEventListener('mousedown', function(e) { mouseDown = true; pmx = e.clientX; pmy = e.clientY; addRipple(e.clientX, e.clientY); });
+lc.addEventListener('mousemove', function(e) { if (mouseDown) onLandingMove(e.clientX, e.clientY); });
+lc.addEventListener('mouseup', function() { mouseDown = false; mx = -999; my = -999; pmx = -999; pmy = -999; });
+lc.addEventListener('mouseleave', function() { mouseDown = false; });
+
+// Also: single click/tap ripple
+lc.addEventListener('click', function(e) { addRipple(e.clientX, e.clientY); });
+
+// ── Ambient particles ──
+var ambParts = [];
+for (var i = 0; i < 40; i++) {
+  ambParts.push({
+    x: Math.random()*2000, y: Math.random()*2000,
+    vx: (Math.random()-.5)*.15, vy: (Math.random()-.5)*.15,
+    size: Math.random()*1.5+.3, alpha: Math.random()*.15+.03,
+    pulse: Math.random()*Math.PI*2, pulseSpeed: .005+Math.random()*.01
+  });
+}
+
+var time = 0;
+
+function animateLanding() {
+  if (!document.getElementById('landing') || document.getElementById('landing').style.display === 'none') return;
+  requestAnimationFrame(animateLanding);
+  time += 0.016;
+
+  lx.fillStyle = 'rgba(7,7,11,0.15)';
+  lx.fillRect(0,0,LW,LH);
+
+  // ── Ambient particles ──
+  for (var i = 0; i < ambParts.length; i++) {
+    var ap = ambParts[i];
+    ap.x += ap.vx; ap.y += ap.vy;
+    ap.pulse += ap.pulseSpeed;
+    if (ap.x < 0) ap.x = LW; if (ap.x > LW) ap.x = 0;
+    if (ap.y < 0) ap.y = LH; if (ap.y > LH) ap.y = 0;
+    var a = ap.alpha * (0.6 + Math.sin(ap.pulse)*0.4);
+    lx.beginPath();
+    lx.arc(ap.x, ap.y, ap.size, 0, Math.PI*2);
+    lx.fillStyle = 'rgba(207,168,114,'+a+')';
+    lx.fill();
+  }
+
+  // ── Ripples ──
+  for (var i = ripples.length-1; i >= 0; i--) {
+    var rp = ripples[i];
+    if (rp.delay && rp.delay > 0) { rp.delay--; continue; }
+    rp.r += rp.speed;
+    rp.alpha = Math.max(0, 1 - rp.r / rp.maxR);
+    if (rp.alpha <= 0) { ripples.splice(i,1); continue; }
+
+    // Main ring
+    lx.beginPath();
+    lx.arc(rp.x, rp.y, rp.r, 0, Math.PI*2);
+    lx.strokeStyle = 'rgba(207,168,114,'+(rp.alpha*0.35)+')';
+    lx.lineWidth = rp.width;
+    lx.stroke();
+
+    // Inner glow
+    if (rp.r < rp.maxR * 0.5) {
+      var grd = lx.createRadialGradient(rp.x,rp.y,0,rp.x,rp.y,rp.r);
+      grd.addColorStop(0,'rgba(207,168,114,'+(rp.alpha*0.04)+')');
+      grd.addColorStop(0.7,'rgba(207,168,114,'+(rp.alpha*0.02)+')');
+      grd.addColorStop(1,'rgba(207,168,114,0)');
+      lx.fillStyle = grd;
+      lx.beginPath();
+      lx.arc(rp.x,rp.y,rp.r,0,Math.PI*2);
+      lx.fill();
+    }
+
+    // Thin secondary ring
+    if (rp.r > 20) {
+      lx.beginPath();
+      lx.arc(rp.x, rp.y, rp.r * 0.6, 0, Math.PI*2);
+      lx.strokeStyle = 'rgba(207,168,114,'+(rp.alpha*0.12)+')';
+      lx.lineWidth = 0.5;
+      lx.stroke();
+    }
+  }
+
+  // ── Light trails ──
+  for (var i = trails.length-1; i >= 0; i--) {
+    var tr = trails[i];
+    tr.life -= 0.012;
+    if (tr.life <= 0) { trails.splice(i,1); continue; }
+    tr.x += tr.vx; tr.y += tr.vy;
+    tr.vy -= 0.01;
+    tr.vx *= 0.99; tr.vy *= 0.99;
+
+    var a = tr.life * 0.7;
+    // Core
+    lx.beginPath();
+    lx.arc(tr.x, tr.y, tr.size * tr.life, 0, Math.PI*2);
+    lx.fillStyle = 'hsla('+tr.hue+',60%,72%,'+a+')';
+    lx.fill();
+    // Glow
+    lx.beginPath();
+    lx.arc(tr.x, tr.y, tr.size * tr.life * 4, 0, Math.PI*2);
+    lx.fillStyle = 'hsla('+tr.hue+',50%,65%,'+(a*0.12)+')';
+    lx.fill();
+  }
+
+  if (trails.length > 400) trails.splice(0, trails.length - 400);
+}
+
+// ── Brand reveal ──
+setTimeout(function() {
+  document.getElementById('brandText').classList.add('show');
+  document.getElementById('landingSub').classList.add('show');
+  document.getElementById('landingLine').classList.add('show');
+  document.getElementById('tapHint').classList.add('show');
+  document.getElementById('dots').classList.add('show');
+}, 300);
+
+animateLanding();
+
+/* ═══════════════════════════════════════════
+   LOGO TAP → ENTER (5 taps)
+   ═══════════════════════════════════════════ */
+var tapCount = 0;
+var tapTimer = null;
+var brand = document.getElementById('brandText');
+
+brand.addEventListener('click', function(e) {
+  e.stopPropagation();
+  tapCount++;
+  // Update dots
+  for (var i = 0; i < 5; i++) {
+    document.getElementById('d'+i).classList.toggle('active', i < tapCount);
+  }
+  // Ripple from brand center
+  var rect = brand.getBoundingClientRect();
+  addRipple(rect.left + rect.width/2, rect.top + rect.height/2);
+
+  if (tapCount >= 5) {
+    tapCount = 0;
+    enterForm();
+    return;
+  }
+  clearTimeout(tapTimer);
+  tapTimer = setTimeout(function() {
+    tapCount = 0;
+    for (var i = 0; i < 5; i++) document.getElementById('d'+i).classList.remove('active');
+  }, 3000);
+});
+
+function enterForm() {
+  var landing = document.getElementById('landing');
+  landing.classList.add('exit');
+  setTimeout(function() {
+    landing.style.display = 'none';
+    document.getElementById('formPage').classList.add('show');
+    // Stagger reveal question blocks
+    var blocks = document.querySelectorAll('.q-block, .submit-area');
+    blocks.forEach(function(b, i) {
+      setTimeout(function() { b.classList.add('vis'); }, 200 + i * 150);
+    });
+  }, 800);
+}
+
+/* ═══════════════════════════════════════════
+   FORM LOGIC
+   ═══════════════════════════════════════════ */
+// Auto-resize
+document.querySelectorAll('textarea').forEach(function(ta) {
+  ta.addEventListener('input', function() {
+    this.style.height = 'auto';
+    this.style.height = Math.max(100, this.scrollHeight) + 'px';
+  });
+});
+
+// Focus glow
+function bindInput(inputId, wrapId, ccId) {
+  var inp = document.getElementById(inputId);
+  var wrap = document.getElementById(wrapId);
+  var cc = ccId ? document.getElementById(ccId) : null;
+  inp.addEventListener('focus', function() { wrap.classList.add('on'); });
+  inp.addEventListener('blur', function() { wrap.classList.remove('on'); });
+  inp.addEventListener('input', function() {
+    if (cc) {
+      var len = this.value.length;
+      cc.textContent = len > 0 ? len + ' 字' : '';
+      cc.style.opacity = len > 0 ? '1' : '0';
+    }
+    checkValid();
+  });
+}
+bindInput('a1','w1','c1');
+bindInput('a2','w2','c2');
+bindInput('em','w3',null);
+
+var subBtn = document.getElementById('subBtn');
+var subHint = document.getElementById('subHint');
+
+function checkValid() {
+  var v1 = document.getElementById('a1').value.trim();
+  var v2 = document.getElementById('a2').value.trim();
+  var email = document.getElementById('em').value.trim();
+  var ok = (v1.length > 0 || v2.length > 0) && email.includes('@') && email.includes('.');
+  subBtn.disabled = !ok;
+  subBtn.classList.toggle('go', ok);
+  subHint.textContent = ok ? 'READY' : '请至少回答一个问题并填写邮箱';
+}
+
+subBtn.addEventListener('click', async function() {
+  if (this.disabled) return;
+  this.textContent = '提交中...';
+  this.disabled = true;
+  var sub = {
+    id: Date.now().toString(36) + Math.random().toString(36).slice(2,6),
+    email: document.getElementById('em').value.trim(),
+    q1: document.getElementById('a1').value,
+    q2: document.getElementById('a2').value,
+    ts: Date.now()
+  };
+  try { if (window.storage) await window.storage.set('sub:'+sub.id, JSON.stringify(sub)); } catch(e){}
+  setTimeout(function() {
+    document.getElementById('formPage').classList.remove('show');
+    document.getElementById('formPage').style.display = 'none';
+    document.getElementById('successPage').classList.add('show');
+  }, 900);
+});
+
+/* ═══════════════════════════════════════════
+   ADMIN (click form logo 5x)
+   ═══════════════════════════════════════════ */
+var fLogoClicks = 0, fLogoTimer = null;
+document.getElementById('formLogo').addEventListener('click', function() {
+  fLogoClicks++;
+  if (fLogoClicks >= 5) { fLogoClicks = 0; showAdmin(); return; }
+  clearTimeout(fLogoTimer);
+  fLogoTimer = setTimeout(function(){ fLogoClicks = 0; }, 2000);
+});
+
+async function showAdmin() {
+  document.getElementById('formPage').style.display = 'none';
+  var ap = document.getElementById('adminPage');
+  ap.classList.add('show');
+  var list = document.getElementById('admList');
+  list.innerHTML = '<div style="text-align:center;padding:40px;color:var(--dim)">加载中...</div>';
+  var subs = [];
+  try {
+    if (window.storage) {
+      var keys = await window.storage.list('sub:');
+      if (keys && keys.keys) {
+        for (var i = 0; i < keys.keys.length; i++) {
+          try { var r = await window.storage.get(keys.keys[i]); if (r&&r.value) subs.push(JSON.parse(r.value)); } catch(e){}
+        }
+        subs.sort(function(a,b){ return b.ts - a.ts; });
+      }
+    }
+  } catch(e){}
+  if (!subs.length) { list.innerHTML = '<div class="adm-empty"><div style="font-size:40px;margin-bottom:12px;opacity:.25">∅</div><div>暂无提交</div></div>'; return; }
+  var h = '<div class="adm-count">共 '+subs.length+' 份提交</div>';
+  subs.forEach(function(s,idx){
+    var n = String(subs.length-idx).padStart(3,'0');
+    var t = new Date(s.ts).toLocaleString('zh-CN');
+    h += '<div class="adm-card" onclick="this.classList.toggle(\'open\')"><div class="adm-row"><div><span class="adm-num">#'+n+'</span><span class="adm-email">'+esc(s.email)+'</span></div><span class="adm-time">'+t+'</span></div><div class="adm-detail"><div class="adm-ql">Q01</div><div class="adm-qa">'+esc(s.q1||'（未作答）')+'</div><div class="adm-ql">Q02</div><div class="adm-qa">'+esc(s.q2||'（未作答）')+'</div></div></div>';
+  });
+  list.innerHTML = h;
+}
+
+document.getElementById('admBack').addEventListener('click', function(){
+  document.getElementById('adminPage').classList.remove('show');
+  document.getElementById('formPage').style.display = '';
+  document.getElementById('formPage').classList.add('show');
+});
+
+function esc(s) { var d = document.createElement('div'); d.textContent = s; return d.innerHTML; }
+</script>
+
+</body>
+</html>
